@@ -11,3 +11,4 @@ chrono = "0.4"
 clap = { version = "4.5.27", features = ["derive"] }
 dialoguer = "0.11"
 shell-words = "1.1.0"
+anyhow = "1.0.95"

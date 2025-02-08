@@ -4,10 +4,9 @@ mod tag;
 mod time;
 mod utils;
 
-use app::App;
+use app::{App, AppHandle};
 use clap::{Parser, Subcommand};
 use database::Database;
-use std::sync::Arc;
 
 #[derive(Parser)]
 #[command(no_binary_name = true)]
@@ -49,8 +48,8 @@ fn parse_duration(s: &str) -> Result<u64, String> {
             )
         })
 }
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut app: App = App::new(Database::new("akashic_log.db")?);
+fn main() -> anyhow::Result<()> {
+    let app_handle = AppHandle::new(App::new(Database::new("akashic_log.db")?));
 
     loop {
         let input = dialoguer::Input::<String>::new()
@@ -74,10 +73,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("get command: {:?}", cli.command);
         match cli.command {
             Commands::Start { duration, tags } => {
-                app.start_timer(duration, tags);
+                app_handle.start_timer(Some(duration), tags);
             }
             Commands::Stop => {
-                app.stop_timer()?;
+                app_handle.stop_timer()?;
             }
             Commands::Status => {
                 println!("Current status:");

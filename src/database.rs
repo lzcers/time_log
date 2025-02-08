@@ -49,13 +49,13 @@ impl Database {
         &self.conn
     }
 
-    pub fn insert_time_slice(&mut self, start: u128, end: u128, tag_ids: Vec<u64>) -> Result<()> {
+    pub fn insert_time_slice(&mut self, start: u64, end: u64, tag_ids: Vec<u64>) -> Result<()> {
         let tx = self.conn.transaction()?;
 
         // 插入时间片段
         tx.execute(
             "INSERT INTO time_slices (start_time, end_time) VALUES (?1, ?2)",
-            [start as i64, end as i64],
+            [start, end],
         )?;
 
         let time_slice_id = tx.last_insert_rowid();
