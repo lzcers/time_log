@@ -14,21 +14,32 @@ impl AppHandle {
         }
     }
 
+    // 现在让我们模拟 Command 调用 AppHandle 的 start_timer 方法
+    // 当 start_time 调用时，可能存在两种情况
+    // 1. duration 为 None，那么只是启动一个计时器，不会停止
+    // 2. duration 不为 None，那么会启动一个计时器，并在 duration 时间后停止
+    // 3. 如果已经存在一个计时器在运行，那么会返回一个错误
     pub fn start_timer(&self, duration: Option<u64>, tags: Vec<String>) {
         let mut app = self.inner.lock().unwrap();
         app.start_timer(tags);
+
+        // 当函数被调用时，创建 Clocker 实例并启动计时器
+        // 如果 duration 不为 None，那么会在 duration 时间后停止计时器
+        // 为了实现 duration 时间后停止计时器，我们需要在 start_timer 方法中创建一个新的线程
+        // 该线程会每隔 10 毫秒检查一下当前时间是否已经超过 duration
+        // 如果超过了，那么会调用 stop_timer 方法停止当前的计时器
+        // 显然，这里为了能在检查线程中调用 stop_timer 方法，我们需要将 App 实例的 Arc<Mutex<App>> 传递给检查线程
 
         let app_inner = self.inner.clone();
         if let Some(duration) = duration {
             std::thread::spawn(move || {
                 loop {
                     {
+                        // 每隔 10 毫秒检查一下当前时间是否已经超过 duration
                         std::thread::sleep(std::time::Duration::from_millis(10));
-                        let app = app_inner.lock().unwrap();
-                        println!("test");
-                        let clocker_ref = app.current_timer.as_ref().unwrap();
+                        let mut app: std::sync::MutexGuard<'_, App> = app_inner.lock().unwrap();
+                        let clocker = app.current_timer.as_mut().unwrap();
 
-                        let mut clocker = clocker_ref.lock().unwrap();
                         if clocker.elapsed() > duration || clocker.is_stop() {
                             if !clocker.is_stop() {
                                 clocker.stop();
@@ -52,7 +63,7 @@ impl AppHandle {
 
 pub struct App {
     db: Database,
-    current_timer: Option<Arc<Mutex<Clocker>>>,
+    current_timer: Option<Clocker>,
     current_tags: Vec<Tag>,
 }
 
@@ -83,19 +94,15 @@ impl App {
         }
 
         // 创建时钟实例并启动
-        let clocker_ref = Arc::new(Mutex::new(Clocker::new()));
-        self.current_timer = Some(clocker_ref.clone());
-
-        std::thread::spawn(move || {
-            let mut clocker = clocker_ref.lock().unwrap();
-            println!("Timer started!");
-            clocker.start();
-        });
+        // 考虑多线程的场景， start_timer 会创建一个 Clocker 实例并启动，并且 Clocker.start 是非堵塞的
+        let mut clocker = Clocker::new();
+        clocker.start();
+        self.current_timer = Some(clocker);
+        println!("Timer started!");
     }
 
     fn stop_timer(&mut self) -> anyhow::Result<()> {
         if let Some(timer) = &mut self.current_timer {
-            let mut timer = timer.lock().unwrap();
             timer.stop();
             let Some(start_time) = timer.start_time else {
                 return Err(Error::msg("Timer is not running!"));
