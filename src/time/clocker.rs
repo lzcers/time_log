@@ -23,7 +23,7 @@ impl Clocker {
         let start_time = self.get_start_time();
         let end_time = Self::get_current_timestamp();
         let elapsed = end_time - start_time;
-
+        self.end_time = Some(end_time);
         println!(
             "clock stop, start_time: {} end_time: {} elapsed: {}",
             start_time, end_time, elapsed

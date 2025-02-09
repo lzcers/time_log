@@ -17,20 +17,14 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Start a timer
+    #[clap(alias = "s")]
     Start {
         /// Duration in minutes (e.g. "15m")
-        #[arg(
-            required = true,
-            value_parser = parse_duration
-        )]
-        duration: u64,
-
-        /// Optional tags (space separated)
+        /// Optional arguments that can be duration (e.g. "5m") or tags
         #[arg(required = false)]
-        tags: Vec<String>,
+        args: Vec<String>,
     },
-    /// Stop current timer
+    #[clap(alias = "t")]
     Stop,
     /// Show current status
     Status,
@@ -39,17 +33,51 @@ enum Commands {
 }
 
 fn parse_duration(s: &str) -> Result<u64, String> {
-    s.strip_suffix('m')
-        .and_then(|num| num.parse().ok())
-        .ok_or_else(|| {
-            format!(
-                "Invalid duration format: '{}'. Expected format like '15m'",
-                s
-            )
-        })
+    if s.is_empty() {
+        return Err("Duration string cannot be empty".to_string());
+    }
+
+    // 纯数字视为秒
+    if s.chars().all(|c| c.is_digit(10)) {
+        return s
+            .parse::<u64>()
+            .map(|seconds| seconds * 1000)
+            .map_err(|_| format!("Invalid number: '{}'", s));
+    }
+
+    // 解析带单位的时间
+    let (num_str, unit) = s.split_at(s.len() - 1);
+    let num = num_str
+        .parse::<u64>()
+        .map_err(|_| format!("Invalid number: '{}'", num_str))?;
+
+    match unit {
+        "s" => Ok(num * 1000),      // 秒转毫秒
+        "m" => Ok(num * 60 * 1000), // 分钟转毫秒
+        _ => Err(format!(
+            "Invalid time unit: '{}'. Expected 's' or 'm'",
+            unit
+        )),
+    }
 }
+
+fn parse_start_args(args: Vec<String>) -> (Option<u64>, Vec<String>) {
+    if args.is_empty() {
+        return (None, vec![]);
+    }
+
+    // 检查第一个参数是否是时间格式
+    if let Ok(duration) = parse_duration(&args[0]) {
+        // 如果第一个参数是时间，剩余的都是标签
+        (Some(duration), args[1..].to_vec())
+    } else {
+        // 如果第一个参数不是时间，所有参数都作为标签
+        (None, args)
+    }
+}
+
 fn main() -> anyhow::Result<()> {
-    let app_handle = AppHandle::new(App::new(Database::new("akashic_log.db")?));
+    let mut app_handle = AppHandle::new(App::new(Database::new("akashic_log.db")?));
 
     loop {
         let input = dialoguer::Input::<String>::new()
@@ -72,8 +100,9 @@ fn main() -> anyhow::Result<()> {
         };
         println!("get command: {:?}", cli.command);
         match cli.command {
-            Commands::Start { duration, tags } => {
-                app_handle.start_timer(Some(duration), tags);
+            Commands::Start { args } => {
+                let (duration, tags) = parse_start_args(args);
+                app_handle.start_timer(duration, tags)?;
             }
             Commands::Stop => {
                 app_handle.stop_timer()?;
