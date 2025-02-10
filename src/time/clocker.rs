@@ -32,7 +32,7 @@ impl Clocker {
         self.end_time
     }
 
-    pub fn elapsed(&self) -> u64 {
+    pub fn duration(&self) -> u64 {
         if !self.is_running() {
             self.get_end_time()
                 .expect("The clocker was stopped, but get end_time failed!")

@@ -107,7 +107,7 @@ struct App {
 pub struct TimerStatus {
     pub start_time: u64,
     pub end_time: Option<u64>,
-    pub elapsed: u64,
+    pub duration: u64,
     pub tags: Vec<String>,
 }
 
@@ -171,11 +171,11 @@ impl App {
             .and_then(|timer| {
                 let start_time = timer.get_start_time();
                 let end_time = timer.get_end_time();
-                let elapsed = timer.elapsed();
+                let duration = timer.duration();
                 Some(TimerStatus {
                     start_time,
                     end_time,
-                    elapsed,
+                    duration,
                     tags: self.current_tags.iter().map(|t| t.name.clone()).collect(),
                 })
             })

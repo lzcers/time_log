@@ -23,8 +23,8 @@ pub fn display_timer_status(status: &TimerStatus) {
     let end_time = status
         .end_time
         .map_or("None".to_string(), |end| get_datetime_str(end));
-    println!("   Tags: {}", status.tags.join(" "));
-    println!("  Start: {}", get_datetime_str(status.start_time));
-    println!("    End: {}", end_time);
-    println!("Elapsed: {}s", status.elapsed / 1000);
+    println!("    Tags: {}", status.tags.join(" "));
+    println!("   Start: {}", get_datetime_str(status.start_time));
+    println!("     End: {}", end_time);
+    println!("Duration: {}s", status.duration / 1000);
 }
