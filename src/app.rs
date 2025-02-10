@@ -1,6 +1,5 @@
+use crate::{database::Database, tag::Tag, time::clocker::Clocker, utils::display_timer_status};
 use anyhow::Error;
-
-use crate::{database::Database, tag::Tag, time::clocker::Clocker};
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -17,54 +16,66 @@ pub struct AppHandle {
 }
 
 impl AppHandle {
-    pub fn new(app: App) -> Self {
+    pub fn new(db: Database) -> Self {
         AppHandle {
-            inner: Arc::new(Mutex::new(app)),
+            inner: Arc::new(Mutex::new(App::new(db))),
             timer_handle: None,
             should_stop_flag: Arc::new(AtomicBool::new(false)),
         }
     }
 
-    pub fn start_timer(&mut self, duration: Option<u64>, tags: Vec<String>) -> anyhow::Result<()> {
+    pub fn start_timer(
+        &mut self,
+        duration: Option<u64>,
+        tags: Vec<String>,
+    ) -> anyhow::Result<TimerStatus> {
         let mut app = self.inner.lock().expect("Failed to get app lock");
         // 只有当前没有计时器在运行时才能启动新的计时器
-        if let Ok(()) = app.start_timer(tags) {
-            let clocker_start_time = app
-                .current_timer
-                .as_ref()
-                .expect("Get current timer failed.")
-                .get_start_time();
-            if let Some(duration) = duration {
-                let app_inner_clone = self.inner.clone();
-                let should_stop_flag = self.should_stop_flag.clone();
-                self.timer_handle = Some(std::thread::spawn(move || loop {
-                    let elapsed = SystemTime::now()
-                        .duration_since(SystemTime::UNIX_EPOCH)
-                        .expect("Get now time failed.")
-                        .as_millis() as u64
-                        - clocker_start_time;
+        match app.start_timer(tags) {
+            Ok(_) => {
+                let clocker_start_time = app
+                    .current_timer
+                    .as_ref()
+                    .expect("Get current timer failed.")
+                    .get_start_time();
+                if let Some(duration) = duration {
+                    let app_inner_clone = self.inner.clone();
+                    let should_stop_flag = self.should_stop_flag.clone();
+                    self.timer_handle = Some(std::thread::spawn(move || loop {
+                        let elapsed = SystemTime::now()
+                            .duration_since(SystemTime::UNIX_EPOCH)
+                            .expect("Get now time failed.")
+                            .as_millis() as u64
+                            - clocker_start_time;
 
-                    if should_stop_flag.load(Ordering::Relaxed) {
-                        break;
-                    }
-                    if elapsed > duration {
-                        if let Err(e) = app_inner_clone
-                            .lock()
-                            .expect("Get app lock failed.")
-                            .stop_timer()
-                        {
-                            eprintln!("Error stopping timer: {}", e);
+                        if should_stop_flag.load(Ordering::Relaxed) {
+                            break;
                         }
-                        break;
-                    }
-                    std::thread::sleep(std::time::Duration::from_millis(1));
-                }));
+                        if elapsed > duration {
+                            let mut app = app_inner_clone.lock().expect("Get app lock failed.");
+                            if let Err(e) = app.stop_timer() {
+                                println!("Error stopping timer: {}", e);
+                            }
+                            if let Ok(status) = app.get_current_timer_status() {
+                                println!("");
+                                println!(
+                                    "The timer automatically stopped, duration: {}s",
+                                    duration / 1000
+                                );
+                                display_timer_status(&status);
+                            }
+                            break;
+                        }
+                        std::thread::sleep(std::time::Duration::from_millis(1));
+                    }));
+                }
+                app.get_current_timer_status()
             }
+            Err(e) => Err(e),
         }
-        Ok(())
     }
 
-    pub fn stop_timer(&mut self) -> anyhow::Result<()> {
+    pub fn stop_timer(&mut self) -> anyhow::Result<TimerStatus> {
         let mut app = self
             .inner
             .lock()
@@ -75,14 +86,29 @@ impl AppHandle {
         let _ = app.stop_timer();
         self.should_stop_flag.store(false, Ordering::Relaxed);
         self.timer_handle = None;
-        Ok(())
+        drop(app);
+        self.get_current_timer_status()
+    }
+
+    pub fn get_current_timer_status(&self) -> anyhow::Result<TimerStatus> {
+        self.inner
+            .lock()
+            .expect("Get app lock failed.")
+            .get_current_timer_status()
     }
 }
 
-pub struct App {
+struct App {
     db: Database,
     current_timer: Option<Clocker>,
     current_tags: Vec<Tag>,
+}
+
+pub struct TimerStatus {
+    pub start_time: u64,
+    pub end_time: Option<u64>,
+    pub elapsed: u64,
+    pub tags: Vec<String>,
 }
 
 impl App {
@@ -96,9 +122,13 @@ impl App {
 
     fn start_timer(&mut self, tags: Vec<String>) -> anyhow::Result<()> {
         // 新增tags参数处理逻辑
-        if self.current_timer.is_some() {
-            println!("Timer is already running!");
-            return Err(Error::msg("Timer is already running!"));
+        if let Some(current_timer) = &self.current_timer {
+            if current_timer.is_running() {
+                return Err(Error::msg("Timer is already running!"));
+            } else {
+                self.current_timer = None;
+                self.current_tags = vec![];
+            }
         }
 
         // 处理标签
@@ -106,7 +136,7 @@ impl App {
             for name in tags {
                 match Tag::find_or_create(&self.db, &name) {
                     Ok(tag) => self.current_tags.push(tag),
-                    Err(e) => eprintln!("Error handling tag '{}': {}", name, e),
+                    Err(e) => println!("Error handling tag '{}': {}", name, e),
                 }
             }
         }
@@ -127,12 +157,28 @@ impl App {
                 .expect("The timer is stopped, but end time is None");
             self.db
                 .insert_time_slice(timer.get_start_time(), end_time, tag_ids)?;
-            println!("Timer stopped and saved!");
         } else {
             println!("No timer is running!");
         }
-        self.current_timer = None;
-        self.current_tags = vec![];
         Ok(())
+    }
+
+    // 获取当前计时器状态
+    fn get_current_timer_status(&self) -> anyhow::Result<TimerStatus> {
+        // 获取当前计时器状态
+        self.current_timer
+            .as_ref()
+            .and_then(|timer| {
+                let start_time = timer.get_start_time();
+                let end_time = timer.get_end_time();
+                let elapsed = timer.elapsed();
+                Some(TimerStatus {
+                    start_time,
+                    end_time,
+                    elapsed,
+                    tags: self.current_tags.iter().map(|t| t.name.clone()).collect(),
+                })
+            })
+            .ok_or(Error::msg("No timer is running!"))
     }
 }

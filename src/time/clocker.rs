@@ -20,14 +20,8 @@ impl Clocker {
     }
 
     pub fn stop(&mut self) {
-        let start_time = self.get_start_time();
         let end_time = Self::get_current_timestamp();
-        let elapsed = end_time - start_time;
         self.end_time = Some(end_time);
-        println!(
-            "clock stop, start_time: {} end_time: {} elapsed: {}",
-            start_time, end_time, elapsed
-        );
     }
 
     pub fn get_start_time(&self) -> u64 {
@@ -39,7 +33,7 @@ impl Clocker {
     }
 
     pub fn elapsed(&self) -> u64 {
-        if self.is_stop() {
+        if !self.is_running() {
             self.get_end_time()
                 .expect("The clocker was stopped, but get end_time failed!")
                 - self.get_start_time()
@@ -48,8 +42,8 @@ impl Clocker {
         }
     }
 
-    pub fn is_stop(&self) -> bool {
-        self.end_time.is_some()
+    pub fn is_running(&self) -> bool {
+        self.end_time.is_none()
     }
 
     fn get_current_timestamp() -> u64 {

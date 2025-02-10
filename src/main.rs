@@ -4,9 +4,10 @@ mod tag;
 mod time;
 mod utils;
 
-use app::{App, AppHandle};
+use app::AppHandle;
 use clap::{Parser, Subcommand};
 use database::Database;
+use utils::display_timer_status;
 
 #[derive(Parser)]
 #[command(no_binary_name = true)]
@@ -27,7 +28,8 @@ enum Commands {
     #[clap(alias = "t")]
     Stop,
     /// Show current status
-    Status,
+    #[clap(alias = "c")]
+    Current,
     /// Exit the program
     Exit,
 }
@@ -77,7 +79,7 @@ fn parse_start_args(args: Vec<String>) -> (Option<u64>, Vec<String>) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let mut app_handle = AppHandle::new(App::new(Database::new("akashic_log.db")?));
+    let mut app_handle = AppHandle::new(Database::new("akashic_log.db")?);
 
     loop {
         let input = dialoguer::Input::<String>::new()
@@ -98,24 +100,34 @@ fn main() -> anyhow::Result<()> {
                 continue;
             }
         };
-        println!("get command: {:?}", cli.command);
+        // println!("get command: {:?}", cli.command);
+        println!("");
         match cli.command {
             Commands::Start { args } => {
                 let (duration, tags) = parse_start_args(args);
-                app_handle.start_timer(duration, tags)?;
+                if let Err(e) = app_handle.start_timer(duration, tags) {
+                    println!("{}", e.to_string());
+                    if let Ok(status) = app_handle.get_current_timer_status() {
+                        display_timer_status(&status);
+                    }
+                }
             }
             Commands::Stop => {
-                app_handle.stop_timer()?;
+                if let Ok(status) = app_handle.stop_timer() {
+                    display_timer_status(&status);
+                }
             }
-            Commands::Status => {
-                println!("Current status:");
-                // TODO: Implement status display
+            Commands::Current => {
+                if let Ok(status) = app_handle.get_current_timer_status() {
+                    display_timer_status(&status);
+                }
             }
             Commands::Exit => {
                 println!("Exiting...");
                 break;
             }
         }
+        println!("");
     }
 
     Ok(())
