@@ -1,4 +1,7 @@
-use crate::{database::Database, tag::Tag, time::clocker::Clocker, utils::display_timer_status};
+use crate::{
+    clocker::Clocker, database::Database, display::display_current_timer_status,
+    time_slice::TimeSlice,
+};
 use anyhow::Error;
 use std::{
     sync::{
@@ -27,11 +30,11 @@ impl AppHandle {
     pub fn start_timer(
         &mut self,
         duration: Option<u64>,
-        tags: Vec<String>,
+        desc: Option<String>,
     ) -> anyhow::Result<TimerStatus> {
         let mut app = self.inner.lock().expect("Failed to get app lock");
         // 只有当前没有计时器在运行时才能启动新的计时器
-        match app.start_timer(tags) {
+        match app.start_timer(desc) {
             Ok(_) => {
                 let clocker_start_time = app
                     .current_timer
@@ -58,11 +61,8 @@ impl AppHandle {
                             }
                             if let Ok(status) = app.get_current_timer_status() {
                                 println!("");
-                                println!(
-                                    "The timer automatically stopped, duration: {}s",
-                                    duration / 1000
-                                );
-                                display_timer_status(&status);
+                                println!("The timer automatically stopped.",);
+                                display_current_timer_status(&status);
                             }
                             break;
                         }
@@ -98,17 +98,17 @@ impl AppHandle {
     }
 }
 
-struct App {
-    db: Database,
-    current_timer: Option<Clocker>,
-    current_tags: Vec<Tag>,
-}
-
 pub struct TimerStatus {
     pub start_time: u64,
     pub end_time: Option<u64>,
-    pub elapsed: u64,
-    pub tags: Vec<String>,
+    pub desc: Option<String>,
+}
+
+struct App {
+    db: Database,
+    timeline: Vec<TimeSlice>,
+    current_timer: Option<Clocker>,
+    current_desc: Option<String>,
 }
 
 impl App {
@@ -116,33 +116,26 @@ impl App {
         App {
             db,
             current_timer: None,
-            current_tags: vec![],
+            current_desc: None,
+            timeline: Vec::new(),
         }
     }
 
-    fn start_timer(&mut self, tags: Vec<String>) -> anyhow::Result<()> {
+    fn start_timer(&mut self, desc: Option<String>) -> anyhow::Result<()> {
         // 新增tags参数处理逻辑
         if let Some(current_timer) = &self.current_timer {
             if current_timer.is_running() {
                 return Err(Error::msg("Timer is already running!"));
             } else {
                 self.current_timer = None;
-                self.current_tags = vec![];
+                self.current_desc = None;
             }
         }
 
-        // 处理标签
-        if !tags.is_empty() {
-            for name in tags {
-                match Tag::find_or_create(&self.db, &name) {
-                    Ok(tag) => self.current_tags.push(tag),
-                    Err(e) => println!("Error handling tag '{}': {}", name, e),
-                }
-            }
-        }
         let mut clocker = Clocker::new();
         clocker.start();
         self.current_timer = Some(clocker);
+        self.current_desc = desc;
         println!("Timer started!");
         Ok(())
     }
@@ -151,12 +144,11 @@ impl App {
         if let Some(timer) = &mut self.current_timer {
             timer.stop();
             // Save time slice to database
-            let tag_ids = self.current_tags.iter().map(|t| t.id).collect();
             let end_time: u64 = timer
                 .get_end_time()
                 .expect("The timer is stopped, but end time is None");
             self.db
-                .insert_time_slice(timer.get_start_time(), end_time, tag_ids)?;
+                .insert_time_slice_info(timer.get_start_time(), end_time, &self.current_desc)?;
         } else {
             println!("No timer is running!");
         }
@@ -171,12 +163,10 @@ impl App {
             .and_then(|timer| {
                 let start_time = timer.get_start_time();
                 let end_time = timer.get_end_time();
-                let elapsed = timer.elapsed();
                 Some(TimerStatus {
                     start_time,
                     end_time,
-                    elapsed,
-                    tags: self.current_tags.iter().map(|t| t.name.clone()).collect(),
+                    desc: self.current_desc.clone(),
                 })
             })
             .ok_or(Error::msg("No timer is running!"))
