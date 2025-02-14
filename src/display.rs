@@ -1,4 +1,4 @@
-use crate::{app::TimerStatus, utils::get_datetime};
+use crate::{app::TimerStatus, timeline::Timeline, utils::get_datetime};
 
 pub fn display_current_timer_status(status: &TimerStatus) {
     let start_datetime = get_datetime(status.start_time);
@@ -21,7 +21,7 @@ pub fn display_current_timer_status(status: &TimerStatus) {
 
     // ----Current Timer--------------------------------
     // Date          Start        End        Duration
-    // 2025/02/13    15:46:51  -  17:03:50   1:16:59
+    // 2025/02/13    15:46:51  -  17:03:50   01:16:59
     // -------------------------------------------------
     // > improved display functionality
     println!("----Current Timer--------------------------------");
@@ -34,5 +34,16 @@ pub fn display_current_timer_status(status: &TimerStatus) {
     println!("> {}", desc);
 }
 
-// 按 tag 筛选 timer 记录
-pub fn display_timer_sheet(tag: Vec<String>) {}
+//
+pub fn display_timer_sheet(timeline: &Timeline) {
+    for time_slice in &timeline.list {
+        if let Ok(time_info) = timeline.get_time_info(time_slice.id) {}
+    }
+
+    // filter:
+    // -------------------------------------------------------------------------------------
+    // Date          Start        End        Duration        Tags        Description
+    // 2025/02/13    15:46:51  -  17:03:50   01:16:59        code        测试效果
+    // -------------------------------------------------------------------------------------
+    // Total:        100days                 100hr
+}

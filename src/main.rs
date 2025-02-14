@@ -1,6 +1,7 @@
 mod app;
 mod clocker;
 mod database;
+mod description;
 mod display;
 mod tag;
 mod time_slice;

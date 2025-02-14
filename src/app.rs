@@ -1,9 +1,15 @@
 use crate::{
-    clocker::Clocker, database::Database, display::display_current_timer_status,
+    clocker::Clocker,
+    database::Database,
+    description::Description,
+    display::display_current_timer_status,
+    tag::Tag,
     time_slice::TimeSlice,
+    timeline::{self, TimeInfo, Timeline},
 };
 use anyhow::Error;
 use std::{
+    collections::HashMap,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
@@ -11,6 +17,12 @@ use std::{
     thread::JoinHandle,
     time::SystemTime,
 };
+
+pub struct TimerStatus {
+    pub start_time: u64,
+    pub end_time: Option<u64>,
+    pub desc: Option<String>,
+}
 
 pub struct AppHandle {
     inner: Arc<Mutex<App>>,
@@ -96,17 +108,20 @@ impl AppHandle {
             .expect("Get app lock failed.")
             .get_current_timer_status()
     }
-}
 
-pub struct TimerStatus {
-    pub start_time: u64,
-    pub end_time: Option<u64>,
-    pub desc: Option<String>,
+    // 获取时间记录列表，可以根据标签和时间范围筛选
+    pub fn get_times_sheet(
+        &self,
+        tag: Vec<String>,
+        start_time: Option<u64>,
+        end_time: Option<u64>,
+    ) -> Vec<TimeInfo> {
+        vec![]
+    }
 }
 
 struct App {
     db: Database,
-    timeline: Vec<TimeSlice>,
     current_timer: Option<Clocker>,
     current_desc: Option<String>,
 }
@@ -117,7 +132,6 @@ impl App {
             db,
             current_timer: None,
             current_desc: None,
-            timeline: Vec::new(),
         }
     }
 
@@ -170,5 +184,24 @@ impl App {
                 })
             })
             .ok_or(Error::msg("No timer is running!"))
+    }
+
+    fn get_timeline(&self) -> anyhow::Result<Timeline> {
+        let timeslice_list = self.db.get_all_time_slices()?;
+        let tags = self.db.get_all_times_tag()?;
+        let desc =
+            self.db
+                .get_all_descriptions()?
+                .into_iter()
+                .fold(HashMap::new(), |mut acc, desc| {
+                    acc.insert(desc.id, desc.description);
+                    acc
+                });
+
+        Ok(Timeline {
+            list: timeslice_list,
+            tags,
+            desc,
+        })
     }
 }

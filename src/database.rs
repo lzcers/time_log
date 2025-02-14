@@ -1,6 +1,9 @@
-use rusqlite::{Connection, Result};
+use std::collections::HashMap;
 
-use crate::{tag::Tag, time_slice::TimeSlice, utils::parse_tags};
+use anyhow::Result;
+use rusqlite::Connection;
+
+use crate::{description::Description, tag::Tag, time_slice::TimeSlice, utils::parse_tags};
 
 pub struct Database {
     pub conn: Connection,
@@ -58,11 +61,7 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_connection(&self) -> &Connection {
-        &self.conn
-    }
-
-    fn get_all_time_slices(&self) -> Result<Vec<TimeSlice>> {
+    pub fn get_all_time_slices(&self) -> Result<Vec<TimeSlice>> {
         let mut stmt = self
             .conn
             .prepare("SELECT id, start_time, end_time FROM time_slices")?;
@@ -79,6 +78,69 @@ impl Database {
         Ok(time_slices)
     }
 
+    pub fn get_all_tags(&self) -> Result<Vec<Tag>> {
+        let mut stmt = self.conn.prepare("SELECT id, name, color FROM tags")?;
+        let tags = stmt
+            .query_map([], |row| {
+                Ok(Tag {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    color: row.get(2)?,
+                })
+            })?
+            .filter_map(|result| result.ok())
+            .collect();
+        Ok(tags)
+    }
+
+    pub fn get_all_descriptions(&self) -> Result<Vec<Description>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id, time_slice_id, description FROM time_slice_descriptions")?;
+        let descriptions = stmt
+            .query_map([], |row| {
+                Ok(Description {
+                    id: row.get(0)?,
+                    time_slice_id: row.get(1)?,
+                    description: row.get(2)?,
+                })
+            })?
+            .filter_map(|result| result.ok())
+            .collect();
+        Ok(descriptions)
+    }
+
+    pub fn get_all_times_tag(&self) -> Result<HashMap<u64, Vec<Tag>>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT t.id, t.name, t.color, ts.time_slice_id 
+             FROM tags t 
+             JOIN time_slice_Tags ts ON t.id = ts.tag_id",
+        )?;
+
+        let mut time_slice_tags: HashMap<u64, Vec<Tag>> = HashMap::new();
+
+        let rows = stmt.query_map([], |row| {
+            Ok((
+                Tag {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    color: row.get(2)?,
+                },
+                row.get::<_, u64>(3)?,
+            ))
+        })?;
+
+        for row in rows {
+            if let Ok((tag, time_slice_id)) = row {
+                time_slice_tags
+                    .entry(time_slice_id)
+                    .or_insert_with(Vec::new)
+                    .push(tag);
+            }
+        }
+
+        Ok(time_slice_tags)
+    }
     pub fn insert_time_slice(&mut self, start: u64, end: u64) -> Result<u64> {
         self.conn.execute(
             "INSERT INTO time_slices (start_time, end_time) VALUES (?1, ?2)",
@@ -105,11 +167,7 @@ impl Database {
         Ok(tag)
     }
 
-    pub fn insert_time_slice_tags(
-        &mut self,
-        time_slice_id: u64,
-        tag_ids: &[u64],
-    ) -> anyhow::Result<()> {
+    pub fn insert_time_slice_tags(&mut self, time_slice_id: u64, tag_ids: &[u64]) -> Result<()> {
         for tag_id in tag_ids {
             self.conn.execute(
                 "INSERT INTO time_slice_Tags (time_slice_id, tag_id) VALUES (?1,?2)",
@@ -136,7 +194,7 @@ impl Database {
         start: u64,
         end: u64,
         desc: &Option<String>,
-    ) -> anyhow::Result<()> {
+    ) -> Result<()> {
         // 插入时间片段
         let time_slice_id = self.insert_time_slice(start, end)?;
 

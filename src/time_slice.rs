@@ -1,4 +1,6 @@
 // 一个时间切片，代表一个时间段
+
+#[derive(Debug, Clone)]
 pub struct TimeSlice {
     pub id: u64,
     pub start_time: u64,
