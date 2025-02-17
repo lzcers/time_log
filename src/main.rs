@@ -11,7 +11,7 @@ mod utils;
 use app::AppHandle;
 use clap::{Parser, Subcommand};
 use database::Database;
-use display::display_current_timer_status;
+use display::{display_current_timer_status, display_timer_sheet};
 use utils::parse_start_args;
 
 #[derive(Parser)]
@@ -35,6 +35,8 @@ enum Commands {
     /// Show current status
     #[clap(alias = "c")]
     Current,
+    #[clap(alias = "l")]
+    List,
     /// Exit the program
     Exit,
 }
@@ -82,6 +84,12 @@ fn main() -> anyhow::Result<()> {
                 if let Ok(status) = app_handle.get_current_timer_status() {
                     display_current_timer_status(&status);
                 }
+            }
+            Commands::List => {
+                if let Ok(timeline) = app_handle.get_timeline(None, None, None) {
+                    display_timer_sheet(&timeline);
+                }
+                break;
             }
             Commands::Exit => {
                 println!("Exiting...");

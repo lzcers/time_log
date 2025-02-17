@@ -13,9 +13,9 @@ pub struct Timeline {
 }
 
 pub struct TimeInfo {
-    time_slice: TimeSlice,
-    tag: Option<Vec<Tag>>,
-    desc: Option<String>,
+    pub time_slice: TimeSlice,
+    pub tag: Option<Vec<Tag>>,
+    pub desc: Option<String>,
 }
 
 impl Timeline {

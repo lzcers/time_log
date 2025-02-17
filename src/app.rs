@@ -110,13 +110,16 @@ impl AppHandle {
     }
 
     // 获取时间记录列表，可以根据标签和时间范围筛选
-    pub fn get_times_sheet(
+    pub fn get_timeline(
         &self,
-        tag: Vec<String>,
+        tag: Option<Vec<String>>,
         start_time: Option<u64>,
         end_time: Option<u64>,
-    ) -> Vec<TimeInfo> {
-        vec![]
+    ) -> anyhow::Result<Timeline> {
+        self.inner
+            .lock()
+            .expect("Get app lock failed")
+            .get_timeline()
     }
 }
 
