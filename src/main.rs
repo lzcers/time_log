@@ -30,7 +30,7 @@ enum Commands {
         #[arg(required = false)]
         args: Vec<String>,
     },
-    #[clap(alias = "e")]
+    #[clap(alias = "t")]
     Stop,
     /// Show current status
     #[clap(alias = "c")]
@@ -56,17 +56,15 @@ fn main() -> anyhow::Result<()> {
             Err(e) => {
                 println!("Error: {e}");
                 println!("Available commands:");
-                println!("  s [duration] [#tag description]");
-                println!("  e : stop current timer");
-                println!("  c : show current timer");
-                println!("  l : show timer history");
+                println!("  start [duration] [--tag TAG]");
+                println!("  stop");
+                println!("  status");
                 println!("  exit");
                 continue;
             }
         };
+        // println!("get command: {:?}", cli.command);
         println!("");
-        println!("get command: {:?}", cli.command);
-
         match cli.command {
             Commands::Start { args } => {
                 let (duration, desc) = parse_start_args(args);
@@ -91,6 +89,7 @@ fn main() -> anyhow::Result<()> {
                 if let Ok(timeline) = app_handle.get_timeline(None, None, None) {
                     display_timer_sheet(&timeline);
                 }
+                break;
             }
             Commands::Exit => {
                 println!("Exiting...");
