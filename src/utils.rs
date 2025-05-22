@@ -32,29 +32,35 @@ pub fn parse_duration(s: &str) -> Result<u64, String> {
     if s.is_empty() {
         return Err("Duration string cannot be empty".to_string());
     }
-
-    // 纯数字视为秒
-    if s.chars().all(|c| c.is_digit(10)) {
-        return s
-            .parse::<u64>()
-            .map(|seconds| seconds * 1000)
-            .map_err(|_| format!("Invalid number: '{}'", s));
+    if let Some(last_char) = s.chars().last() {
+        // 检查最后一个字符是否为数字，实则判断整个字符串是否为纯数字
+        if last_char.is_digit(10) {
+            // 纯数字视为秒
+            if s.chars().all(|c| c.is_digit(10)) {
+                return s
+                    .parse::<u64>()
+                    .map(|seconds| seconds * 1000)
+                    .map_err(|_| format!("Invalid number: '{}'", s));
+            }
+        }
+        if last_char.is_alphabetic() {
+            // 判断是否为带单位的时间
+            // 解析带单位的时间
+            let (num_str, unit) = s.split_at(s.len() - last_char.len_utf8());
+            let num = num_str
+                .parse::<u64>()
+                .map_err(|_| format!("Invalid number: '{}'", num_str))?;
+            return match unit {
+                "s" => Ok(num * 1000),      // 秒转毫秒
+                "m" => Ok(num * 60 * 1000), // 分钟转毫秒
+                _ => Err(format!(
+                    "Invalid time unit: '{}'. Expected 's' or 'm'",
+                    unit
+                )),
+            };
+        }
     }
-
-    // 解析带单位的时间
-    let (num_str, unit) = s.split_at(s.len() - 1);
-    let num = num_str
-        .parse::<u64>()
-        .map_err(|_| format!("Invalid number: '{}'", num_str))?;
-
-    match unit {
-        "s" => Ok(num * 1000),      // 秒转毫秒
-        "m" => Ok(num * 60 * 1000), // 分钟转毫秒
-        _ => Err(format!(
-            "Invalid time unit: '{}'. Expected 's' or 'm'",
-            unit
-        )),
-    }
+    return Err(format!("Invalid duration string '{s}'"));
 }
 
 // s 15m #code 编写 timeLog

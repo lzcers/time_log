@@ -13,9 +13,10 @@ pub fn display_current_timer_status(status: &TimerStatus) {
     let empty = "".to_string();
     let desc = status.desc.as_ref().unwrap_or(&empty);
     let duration = status.end_time.map_or_else(
-        || get_datetime(chrono::Utc::now().timestamp() as u64) - start_datetime,
+        || get_datetime(chrono::Utc::now().timestamp() as u64 * 1000) - start_datetime,
         |end| get_datetime(end) - start_datetime,
     );
+
     let hours = duration.num_hours();
     let minutes = duration.num_minutes() % 60;
     let seconds = duration.num_seconds() % 60;
