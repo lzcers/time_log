@@ -1,11 +1,5 @@
 use crate::{
-    clocker::Clocker,
-    database::Database,
-    description::Description,
-    display::display_current_timer_status,
-    tag::Tag,
-    time_slice::TimeSlice,
-    timeline::{self, TimeInfo, Timeline},
+    clocker::Clocker, database::Database, display::display_current_timer_status, timeline::Timeline,
 };
 use anyhow::Error;
 use std::{

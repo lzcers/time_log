@@ -1,3 +1,5 @@
+use chrono::TimeDelta;
+
 use crate::{app::TimerStatus, timeline::Timeline, utils::get_datetime};
 
 pub fn display_current_timer_status(status: &TimerStatus) {
@@ -34,7 +36,12 @@ pub fn display_current_timer_status(status: &TimerStatus) {
     println!("> {}", desc);
 }
 
-//
+fn formatTimeDelta(delta: TimeDelta) -> (i64, i64, i64) {
+    let hours = delta.num_hours();
+    let minutes = delta.num_minutes() % 60;
+    let seconds = delta.num_seconds() % 60;
+    return (hours, minutes, seconds);
+}
 pub fn display_timer_sheet(timeline: &Timeline) {
     // filter:
     // ---------------------------------------------------------------------------------------------------------
@@ -47,7 +54,7 @@ pub fn display_timer_sheet(timeline: &Timeline) {
     println!("---------------------------------------------------------------------------------------------------------");
     println!("Date          Start        End        Duration        Tags        Description");
     let mut total_days = 0;
-    let mut total_hours = 0;
+    let mut total_time = TimeDelta::default();
     let mut prev_date = "".to_string();
     for time_slice in &timeline.list {
         if let Ok(time_info) = timeline.get_time_info(time_slice.id) {
@@ -61,10 +68,8 @@ pub fn display_timer_sheet(timeline: &Timeline) {
 
             let duration = get_datetime(time_slice.end_time) - start_datetime;
             // 计算所有的 duration 总和
-            // total_hours += duration.num_hours() as i32;
-            let hours = duration.num_hours();
-            let minutes = duration.num_minutes() % 60;
-            let seconds = duration.num_seconds() % 60;
+            total_time += duration;
+            let (hours, minutes, seconds) = formatTimeDelta(duration);
             let duration_str = format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
             let tags = time_info
                 .tag
@@ -90,5 +95,7 @@ pub fn display_timer_sheet(timeline: &Timeline) {
         }
     }
     println!("---------------------------------------------------------------------------------------------------------");
-    println!("Total:        {total_days}days                 {total_hours}hr")
+    let (hours, minutes, seconds) = formatTimeDelta(total_time);
+    let total_time_str = format!("{}hour {}min {}sec", hours, minutes, seconds);
+    println!("Total:        {total_days}days                 {total_time_str}")
 }
