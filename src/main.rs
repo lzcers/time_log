@@ -89,7 +89,6 @@ fn main() -> anyhow::Result<()> {
                 if let Ok(timeline) = app_handle.get_timeline(None, None, None) {
                     display_timer_sheet(&timeline);
                 }
-                break;
             }
             Commands::Exit => {
                 println!("Exiting...");
