@@ -63,7 +63,7 @@ fn main() -> anyhow::Result<()> {
                 continue;
             }
         };
-        // println!("get command: {:?}", cli.command);
+        println!("get command: {:?}", cli.command);
         println!("");
         match cli.command {
             Commands::Start { args } => {
