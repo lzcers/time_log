@@ -50,8 +50,7 @@ impl Database {
         // 创建一个时间片段描述表，用于存储时间片段的描述信息
         conn.execute(
             "CREATE TABLE IF NOT EXISTS time_slice_descriptions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    time_slice_id INTEGER NOT NULL,
+                    time_slice_id INTEGER PRIMARY KEY NOT NULL,
                     description TEXT,
                     FOREIGN KEY (time_slice_id) REFERENCES time_slices(id) ON DELETE CASCADE
             )",
@@ -96,13 +95,12 @@ impl Database {
     pub fn get_all_descriptions(&self) -> Result<Vec<Description>> {
         let mut stmt = self
             .conn
-            .prepare("SELECT id, time_slice_id, description FROM time_slice_descriptions")?;
+            .prepare("SELECT time_slice_id, description FROM time_slice_descriptions")?;
         let descriptions = stmt
             .query_map([], |row| {
                 Ok(Description {
-                    id: row.get(0)?,
-                    time_slice_id: row.get(1)?,
-                    description: row.get(2)?,
+                    time_slice_id: row.get(0)?,
+                    description: row.get(1)?,
                 })
             })?
             .filter_map(|result| result.ok())
@@ -112,8 +110,8 @@ impl Database {
 
     pub fn get_all_times_tag(&self) -> Result<HashMap<u64, Vec<Tag>>> {
         let mut stmt = self.conn.prepare(
-            "SELECT t.id, t.name, t.color, ts.time_slice_id 
-             FROM tags t 
+            "SELECT t.id, t.name, t.color, ts.time_slice_id
+             FROM tags t
              JOIN time_slice_Tags ts ON t.id = ts.tag_id",
         )?;
 

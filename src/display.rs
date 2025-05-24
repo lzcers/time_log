@@ -29,10 +29,18 @@ pub fn display_current_timer_status(status: &TimerStatus) {
     // > improved display functionality
     println!("----Current Timer--------------------------------");
     println!("Date          Start        End        Duration");
-    println!(
-        "{}    {}  -  {}   {}",
-        date_str, start_str, end_str, duration_str
-    );
+    if end_str == "None" {
+        println!(
+            "{}    {}  -  {}       {}",
+            date_str, start_str, end_str, duration_str
+        );
+    } else {
+        println!(
+            "{}    {}  -  {}   {}",
+            date_str, start_str, end_str, duration_str
+        );
+    }
+
     println!("-------------------------------------------------");
     println!("> {}", desc);
 }
@@ -52,7 +60,9 @@ pub fn display_timer_sheet(timeline: &Timeline) {
     // Total:        100days                 100hr
 
     println!("filter:");
-    println!("---------------------------------------------------------------------------------------------------------");
+    println!(
+        "---------------------------------------------------------------------------------------------------------"
+    );
     println!("Date          Start        End        Duration        Tags        Description");
     let mut total_days = 0;
     let mut total_time = TimeDelta::default();
@@ -95,7 +105,9 @@ pub fn display_timer_sheet(timeline: &Timeline) {
             prev_date = date_str;
         }
     }
-    println!("---------------------------------------------------------------------------------------------------------");
+    println!(
+        "---------------------------------------------------------------------------------------------------------"
+    );
     let (hours, minutes, seconds) = formatTimeDelta(total_time);
     let total_time_str = format!("{}hour {}min {}sec", hours, minutes, seconds);
     println!("Total:        {total_days}days                 {total_time_str}")

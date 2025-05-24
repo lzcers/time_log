@@ -12,6 +12,7 @@ pub struct Timeline {
     pub desc: HashMap<u64, String>,
 }
 
+#[derive(Debug)]
 pub struct TimeInfo {
     pub time_slice: TimeSlice,
     pub tag: Option<Vec<Tag>>,

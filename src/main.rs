@@ -63,8 +63,8 @@ fn main() -> anyhow::Result<()> {
                 continue;
             }
         };
-        println!("get command: {:?}", cli.command);
-        println!("");
+        // println!("get command: {:?}", cli.command);
+        // println!("");
         match cli.command {
             Commands::Start { args } => {
                 let (duration, desc) = parse_start_args(args);

@@ -5,8 +5,8 @@ use anyhow::Error;
 use std::{
     collections::HashMap,
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
     },
     thread::JoinHandle,
     time::SystemTime,
@@ -50,29 +50,31 @@ impl AppHandle {
                 if let Some(duration) = duration {
                     let app_inner_clone = self.inner.clone();
                     let should_stop_flag = self.should_stop_flag.clone();
-                    self.timer_handle = Some(std::thread::spawn(move || loop {
-                        let elapsed = SystemTime::now()
-                            .duration_since(SystemTime::UNIX_EPOCH)
-                            .expect("Get now time failed.")
-                            .as_millis() as u64
-                            - clocker_start_time;
+                    self.timer_handle = Some(std::thread::spawn(move || {
+                        loop {
+                            if should_stop_flag.load(Ordering::Relaxed) {
+                                break;
+                            }
+                            let elapsed = SystemTime::now()
+                                .duration_since(SystemTime::UNIX_EPOCH)
+                                .expect("Get now time failed.")
+                                .as_millis() as u64
+                                - clocker_start_time;
 
-                        if should_stop_flag.load(Ordering::Relaxed) {
-                            break;
-                        }
-                        if elapsed > duration {
-                            let mut app = app_inner_clone.lock().expect("Get app lock failed.");
-                            if let Err(e) = app.stop_timer() {
-                                println!("Error stopping timer: {}", e);
+                            if elapsed > duration {
+                                let mut app = app_inner_clone.lock().expect("Get app lock failed.");
+                                if let Err(e) = app.stop_timer() {
+                                    println!("Error stopping timer: {}", e);
+                                }
+                                if let Ok(status) = app.get_current_timer_status() {
+                                    println!("");
+                                    println!("The timer automatically stopped.",);
+                                    display_current_timer_status(&status);
+                                }
+                                break;
                             }
-                            if let Ok(status) = app.get_current_timer_status() {
-                                println!("");
-                                println!("The timer automatically stopped.",);
-                                display_current_timer_status(&status);
-                            }
-                            break;
+                            std::thread::sleep(std::time::Duration::from_millis(1));
                         }
-                        std::thread::sleep(std::time::Duration::from_millis(1));
                     }));
                 }
                 app.get_current_timer_status()
@@ -191,7 +193,7 @@ impl App {
                 .get_all_descriptions()?
                 .into_iter()
                 .fold(HashMap::new(), |mut acc, desc| {
-                    acc.insert(desc.id, desc.description);
+                    acc.insert(desc.time_slice_id, desc.description);
                     acc
                 });
 
