@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
+use super::{description::Description, tag::Tag, time_slice::TimeSlice};
 use anyhow::Result;
 use rusqlite::Connection;
-
-use super::{description::Description, tag::Tag, time_slice::TimeSlice};
 
 pub struct Database {
     pub conn: Connection,
@@ -18,20 +17,20 @@ impl Database {
 
     fn init_tables(conn: &Connection) -> Result<()> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS tags (
+            "CREATE TABLE IF NOT EXISTS time_slices (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT UNIQUE NOT NULL,
-                    color TEXT
+                    start_time DATETIME NOT NULL,
+                    end_time DATETIME,
+                    CHECK (end_time IS NULL OR end_time > start_time)
             )",
             [],
         )?;
 
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS time_slices (
+            "CREATE TABLE IF NOT EXISTS tags (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    start_time DATETIME NOT NULL,
-                    end_time DATETIME NOT NULL,
-                    CHECK (end_time > start_time)
+                    name TEXT UNIQUE NOT NULL,
+                    color TEXT
             )",
             [],
         )?;
@@ -139,10 +138,11 @@ impl Database {
 
         Ok(time_slice_tags)
     }
-    pub fn insert_time_slice(&mut self, start: u64, end: u64) -> Result<u64> {
+
+    pub fn insert_time_slice(&mut self, start: u64, end: Option<u64>) -> Result<u64> {
         self.conn.execute(
             "INSERT INTO time_slices (start_time, end_time) VALUES (?1, ?2)",
-            [start, end],
+            (start, end),
         )?;
         Ok(self.conn.last_insert_rowid() as u64)
     }
@@ -190,7 +190,7 @@ impl Database {
     pub fn insert_time_slice_info(
         &mut self,
         start: u64,
-        end: u64,
+        end: Option<u64>,
         tags: &Vec<String>,
         desc: &Option<String>,
     ) -> Result<()> {
@@ -205,7 +205,8 @@ impl Database {
             if !tags.is_empty() {
                 let mut tag_ids = vec![];
                 for name in tags {
-                    match self.find_or_create_tag(&name) {
+                    let tag_result = self.find_or_create_tag(&name);
+                    match tag_result {
                         Ok(tag) => tag_ids.push(tag.id),
                         Err(e) => println!("Error handling tag '{}': {}", name, e),
                     }
@@ -223,6 +224,47 @@ impl Database {
     pub fn remove_time_slice(&mut self, time_slice_id: u64) -> Result<()> {
         self.conn
             .execute("DELETE FROM time_slices WHERE id = ?1", [time_slice_id])?;
+        Ok(())
+    }
+
+    pub fn update_time_slice(&mut self, time_slice: &TimeSlice) -> Result<()> {
+        self.conn.execute(
+            "UPDATE time_slices SET start_time =?1, end_time =?2 WHERE id =?3",
+            (time_slice.start_time, time_slice.end_time, time_slice.id),
+        )?;
+        Ok(())
+    }
+
+    pub fn update_time_slice_tags(&mut self, time_slice_id: u64, tags: &Vec<String>) -> Result<()> {
+        self.conn.execute(
+            "DELETE FROM time_slice_Tags WHERE time_slice_id =?1",
+            [time_slice_id],
+        )?;
+
+        let mut tag_ids = vec![];
+        for name in tags {
+            match self.find_or_create_tag(name) {
+                Ok(tag) => {
+                    tag_ids.push(tag.id);
+                }
+                Err(e) => println!("Error handling tag '{}': {}", name, e),
+            }
+        }
+        if !tag_ids.is_empty() {
+            self.insert_time_slice_tags(time_slice_id, &tag_ids)?;
+        }
+        Ok(())
+    }
+
+    pub fn update_time_slice_description(
+        &mut self,
+        time_slice_id: u64,
+        description: &str,
+    ) -> Result<()> {
+        self.conn.execute(
+            "UPDATE time_slice_descriptions SET description =?1 WHERE time_slice_id =?2",
+            (description, time_slice_id),
+        )?;
         Ok(())
     }
 }

@@ -1,6 +1,7 @@
-use crate::core::{clocker::Clocker, database::Database, timeline::Timeline};
-use crate::display::display_current_timer_status;
-use crate::utils;
+use super::clocker::Clocker;
+use super::display::display_current_timer_status;
+use super::utils;
+use crate::core::{database::Database, timeline::Timeline};
 use anyhow::Error;
 use std::{
     collections::HashMap,
@@ -174,7 +175,7 @@ impl App {
             let tags = utils::parse_tags(&desc_str);
             self.db.insert_time_slice_info(
                 timer.get_start_time(),
-                end_time,
+                Some(end_time),
                 &tags,
                 &self.current_desc,
             )?;

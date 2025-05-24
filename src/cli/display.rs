@@ -1,5 +1,5 @@
-use super::core::timeline::Timeline;
-use crate::{app::TimerStatus, utils::get_datetime};
+use super::{app::TimerStatus, utils::get_datetime};
+use crate::core::timeline::Timeline;
 use chrono::TimeDelta;
 
 pub fn display_current_timer_status(status: &TimerStatus) {
@@ -74,11 +74,18 @@ pub fn display_timer_sheet(timeline: &Timeline) {
             let start_datetime = get_datetime(time_slice.start_time);
             let date_str = start_datetime.format("%Y-%m-%d").to_string();
             let start_str = start_datetime.format("%H:%M:%S").to_string();
-            let end_str = get_datetime(time_slice.end_time)
-                .format("%H:%M:%S")
-                .to_string();
+            let end_str = if let Some(end) = time_slice.end_time {
+                get_datetime(end).format("%H:%M:%S").to_string()
+            } else {
+                "None".to_string()
+            };
 
-            let duration = get_datetime(time_slice.end_time) - start_datetime;
+            let duration = if let Some(end) = time_slice.end_time {
+                get_datetime(end) - start_datetime
+            } else {
+                get_datetime(chrono::Utc::now().timestamp() as u64 * 1000) - start_datetime
+            };
+
             // 计算所有的 duration 总和
             total_time += duration;
             let (hours, minutes, seconds) = formatTimeDelta(duration);

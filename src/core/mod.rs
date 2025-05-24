@@ -1,4 +1,3 @@
-pub mod clocker;
 pub mod database;
 pub mod description;
 pub mod tag;

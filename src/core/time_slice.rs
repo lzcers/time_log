@@ -4,11 +4,11 @@
 pub struct TimeSlice {
     pub id: u64,
     pub start_time: u64,
-    pub end_time: u64,
+    pub end_time: Option<u64>,
 }
 
 impl TimeSlice {
-    pub fn new(id: u64, start_time: u64, end_time: u64) -> Self {
+    pub fn new(id: u64, start_time: u64, end_time: Option<u64>) -> Self {
         Self {
             id,
             start_time,
@@ -18,6 +18,10 @@ impl TimeSlice {
 
     // 获取切片的长度，单位为毫秒
     pub fn get_len(&self) -> u64 {
-        self.end_time - self.start_time
+        if let Some(end) = self.end_time {
+            end - self.start_time
+        } else {
+            0
+        }
     }
 }
