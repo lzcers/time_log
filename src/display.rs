@@ -1,6 +1,6 @@
+use super::core::timeline::Timeline;
+use crate::{app::TimerStatus, utils::get_datetime};
 use chrono::TimeDelta;
-
-use crate::{app::TimerStatus, timeline::Timeline, utils::get_datetime};
 
 pub fn display_current_timer_status(status: &TimerStatus) {
     let start_datetime = get_datetime(status.start_time);
@@ -63,8 +63,9 @@ pub fn display_timer_sheet(timeline: &Timeline) {
     println!(
         "---------------------------------------------------------------------------------------------------------"
     );
-    println!("Date          Start        End        Duration        Tags        Description");
+    println!("ID    Date          Start        End        Duration        Tags        Description");
     let mut total_days = 0;
+
     let mut total_time = TimeDelta::default();
     let mut prev_date = "".to_string();
     for time_slice in &timeline.list {
@@ -97,7 +98,8 @@ pub fn display_timer_sheet(timeline: &Timeline) {
                 date_str.clone()
             };
             println!(
-                "{:<10}    {start_str}  -  {end_str}   {duration_str}        {:<12}{}",
+                "{:<4}  {:<10}    {start_str}  -  {end_str}   {duration_str}        {:<10}  {}",
+                time_slice.id,
                 print_date,
                 tags,
                 desc.trim()

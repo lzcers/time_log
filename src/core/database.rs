@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use anyhow::Result;
 use rusqlite::Connection;
 
-use crate::{description::Description, tag::Tag, time_slice::TimeSlice, utils::parse_tags};
+use super::{description::Description, tag::Tag, time_slice::TimeSlice};
 
 pub struct Database {
     pub conn: Connection,
@@ -191,13 +191,13 @@ impl Database {
         &mut self,
         start: u64,
         end: u64,
+        tags: &Vec<String>,
         desc: &Option<String>,
     ) -> Result<()> {
         // 插入时间片段
         let time_slice_id = self.insert_time_slice(start, end)?;
 
         if let Some(desc_str) = desc {
-            let tags = parse_tags(&desc_str);
             // 写入时间片段描述
             self.insert_time_slice_description(time_slice_id, desc_str)?;
 
@@ -217,6 +217,12 @@ impl Database {
             }
         }
 
+        Ok(())
+    }
+
+    pub fn remove_time_slice(&mut self, time_slice_id: u64) -> Result<()> {
+        self.conn
+            .execute("DELETE FROM time_slices WHERE id = ?1", [time_slice_id])?;
         Ok(())
     }
 }

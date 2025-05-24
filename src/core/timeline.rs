@@ -1,5 +1,5 @@
+use super::tag::Tag;
 use super::time_slice::TimeSlice;
-use crate::tag::Tag;
 use anyhow::anyhow;
 use std::collections::HashMap;
 

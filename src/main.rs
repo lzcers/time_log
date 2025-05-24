@@ -1,16 +1,11 @@
 mod app;
-mod clocker;
-mod database;
-mod description;
+mod core;
 mod display;
-mod tag;
-mod time_slice;
-mod timeline;
 mod utils;
 
 use app::AppHandle;
 use clap::{Parser, Subcommand};
-use database::Database;
+use core::database::Database;
 use display::{display_current_timer_status, display_timer_sheet};
 use utils::parse_start_args;
 
@@ -30,11 +25,16 @@ enum Commands {
         #[arg(required = false)]
         args: Vec<String>,
     },
-    #[clap(alias = "t")]
+    #[clap(alias = "e")]
     Stop,
     /// Show current status
     #[clap(alias = "c")]
     Current,
+    #[clap(alias = "r")]
+    Remove {
+        #[arg(required = true)]
+        id: u64,
+    },
     #[clap(alias = "l")]
     List,
     /// Exit the program
@@ -43,10 +43,9 @@ enum Commands {
 
 fn main() -> anyhow::Result<()> {
     let mut app_handle = AppHandle::new(Database::new("akashic_log.db")?);
-
     loop {
         let input = dialoguer::Input::<String>::new()
-            .with_prompt("akashic_log")
+            .with_prompt("")
             .interact_text()?;
 
         let args = shell_words::split(&input)?;
@@ -56,9 +55,11 @@ fn main() -> anyhow::Result<()> {
             Err(e) => {
                 println!("Error: {e}");
                 println!("Available commands:");
-                println!("  start [duration] [--tag TAG]");
-                println!("  stop");
-                println!("  status");
+                println!("  s [duration] [#tag description]: start a new timer");
+                println!("  e      : stop current timer");
+                println!("  c      : show current timer");
+                println!("  l      : show timer history");
+                println!("  r [id] : remove time record");
                 println!("  exit");
                 continue;
             }
@@ -85,6 +86,13 @@ fn main() -> anyhow::Result<()> {
                     display_current_timer_status(&status);
                 }
             }
+            Commands::Remove { id } => {
+                if let Ok(()) = app_handle.remove_time_slice(id) {
+                    if let Ok(timeline) = app_handle.get_timeline(None, None, None) {
+                        display_timer_sheet(&timeline);
+                    }
+                }
+            }
             Commands::List => {
                 if let Ok(timeline) = app_handle.get_timeline(None, None, None) {
                     display_timer_sheet(&timeline);
@@ -97,6 +105,5 @@ fn main() -> anyhow::Result<()> {
         }
         println!("");
     }
-
     Ok(())
 }

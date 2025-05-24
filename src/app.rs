@@ -1,6 +1,6 @@
-use crate::{
-    clocker::Clocker, database::Database, display::display_current_timer_status, timeline::Timeline,
-};
+use crate::core::{clocker::Clocker, database::Database, timeline::Timeline};
+use crate::display::display_current_timer_status;
+use crate::utils;
 use anyhow::Error;
 use std::{
     collections::HashMap,
@@ -117,6 +117,14 @@ impl AppHandle {
             .expect("Get app lock failed")
             .get_timeline()
     }
+
+    pub fn remove_time_slice(&self, id: u64) -> anyhow::Result<()> {
+        self.inner
+            .lock()
+            .expect("Get app lock failed")
+            .db
+            .remove_time_slice(id)
+    }
 }
 
 struct App {
@@ -160,8 +168,16 @@ impl App {
             let end_time: u64 = timer
                 .get_end_time()
                 .expect("The timer is stopped, but end time is None");
-            self.db
-                .insert_time_slice_info(timer.get_start_time(), end_time, &self.current_desc)?;
+
+            let empty_str = "".to_string();
+            let desc_str = self.current_desc.as_ref().unwrap_or(&empty_str);
+            let tags = utils::parse_tags(&desc_str);
+            self.db.insert_time_slice_info(
+                timer.get_start_time(),
+                end_time,
+                &tags,
+                &self.current_desc,
+            )?;
         } else {
             println!("No timer is running!");
         }

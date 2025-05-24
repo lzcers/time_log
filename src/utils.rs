@@ -63,7 +63,7 @@ pub fn parse_duration(s: &str) -> Result<u64, String> {
     return Err(format!("Invalid duration string '{s}'"));
 }
 
-// s 15m #code 编写 timeLog
+// s 15m "#code 编写 timeLog"
 // <command> [duration] [desc]
 pub fn parse_start_args(args: Vec<String>) -> (Option<u64>, Option<String>) {
     if args.is_empty() {
