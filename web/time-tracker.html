@@ -42,6 +42,19 @@
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 color: white;
             }
+
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+
+            .category-btn {
+                flex-shrink: 0;
+            }
         </style>
     </head>
     <body class="bg-gray-900 text-white min-h-screen">
@@ -115,28 +128,97 @@
             <!-- 底部分类按钮 -->
             <div class="relative z-10 px-6 pb-8">
                 <div class="glass-effect rounded-2xl p-4">
-                    <div class="grid grid-cols-5 gap-3">
-                        <button
-                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
-                        >
-                            娱乐
-                        </button>
-                        <button
-                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
-                        >
-                            工作
-                        </button>
-                        <button class="category-btn active rounded-xl py-3 px-2 text-sm font-medium border border-transparent">学习</button>
-                        <button
-                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
-                        >
-                            游戏
-                        </button>
-                        <button
-                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
-                        >
-                            健身
-                        </button>
+                    <!-- 滑动容器 -->
+                    <div class="overflow-x-auto scrollbar-hide">
+                        <div class="flex space-x-3 pb-2" style="width: max-content">
+                            <!-- 常用活动 -->
+                            <button
+                                class="category-btn active rounded-xl py-3 px-4 text-sm font-medium border border-transparent flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="book-open" class="w-5 h-5"></i>
+                                <span>学习</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                                <span>工作</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="gamepad-2" class="w-5 h-5"></i>
+                                <span>游戏</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="dumbbell" class="w-5 h-5"></i>
+                                <span>健身</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="music" class="w-5 h-5"></i>
+                                <span>娱乐</span>
+                            </button>
+
+                            <!-- 更多活动项目 -->
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="utensils" class="w-5 h-5"></i>
+                                <span>用餐</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="car" class="w-5 h-5"></i>
+                                <span>通勤</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+                                <span>购物</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                                <span>社交</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="bed" class="w-5 h-5"></i>
+                                <span>休息</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="palette" class="w-5 h-5"></i>
+                                <span>创作</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="heart" class="w-5 h-5"></i>
+                                <span>冥想</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="home" class="w-5 h-5"></i>
+                                <span>家务</span>
+                            </button>
+                            <button
+                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
+                            >
+                                <i data-lucide="plus" class="w-5 h-5"></i>
+                                <span>其他</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
