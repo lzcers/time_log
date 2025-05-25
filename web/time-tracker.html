@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>时间记录工具</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+        <style>
+            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+            body {
+                font-family: "Inter", sans-serif;
+            }
+
+            .timer-circle {
+                stroke-dasharray: 628;
+                stroke-dashoffset: 628;
+                transition: stroke-dashoffset 0.3s ease;
+            }
+
+            .timer-circle.active {
+                stroke-dashoffset: 314;
+            }
+
+            .glass-effect {
+                backdrop-filter: blur(10px);
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .category-btn {
+                transition: all 0.3s ease;
+            }
+
+            .category-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            }
+
+            .category-btn.active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-900 text-white min-h-screen">
+        <!-- 主容器 -->
+        <div class="max-w-md mx-auto min-h-screen bg-gray-900 relative overflow-hidden">
+            <!-- 背景装饰 -->
+            <div class="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black"></div>
+            <div class="absolute top-20 left-10 w-32 h-32 bg-blue-500 rounded-full opacity-10 blur-xl"></div>
+            <div class="absolute bottom-40 right-10 w-24 h-24 bg-purple-500 rounded-full opacity-10 blur-xl"></div>
+
+            <!-- 顶部导航 -->
+            <div class="relative z-10 flex justify-between items-center p-6 pt-12">
+                <button class="glass-effect px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all">记时</button>
+                <button class="glass-effect px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all">详情</button>
+            </div>
+
+            <!-- 主计时器区域 -->
+            <div class="relative z-10 flex flex-col items-center justify-center px-8 py-12">
+                <!-- 圆形计时器 -->
+                <div class="relative mb-8">
+                    <svg class="w-64 h-64 transform -rotate-90" viewBox="0 0 200 200">
+                        <!-- 背景圆环 -->
+                        <circle cx="100" cy="100" r="90" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"></circle>
+                        <!-- 进度圆环 -->
+                        <circle
+                            cx="100"
+                            cy="100"
+                            r="90"
+                            stroke="url(#gradient)"
+                            stroke-width="8"
+                            fill="none"
+                            class="timer-circle active"
+                            stroke-linecap="round"
+                        ></circle>
+                        <!-- 渐变定义 -->
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color: #667eea; stop-opacity: 1" />
+                                <stop offset="100%" style="stop-color: #764ba2; stop-opacity: 1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+
+                    <!-- 播放按钮 -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <button class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-all group">
+                            <i data-lucide="play" class="w-8 h-8 text-white ml-1 group-hover:scale-110 transition-transform"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 时间显示 -->
+                <div class="text-center mb-8">
+                    <div class="text-5xl font-light mb-2 tracking-wider">03:46:59</div>
+                    <div class="text-lg text-gray-400 font-medium">03:46:59</div>
+                </div>
+
+                <!-- 统计信息 -->
+                <div class="flex justify-between w-full px-4 mb-12">
+                    <div class="text-center">
+                        <div class="text-sm text-gray-400 mb-1">今日专注</div>
+                        <div class="text-xl font-semibold">6 小时</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-sm text-gray-400 mb-1">总专注</div>
+                        <div class="text-xl font-semibold">1000 小时</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部分类按钮 -->
+            <div class="relative z-10 px-6 pb-8">
+                <div class="glass-effect rounded-2xl p-4">
+                    <div class="grid grid-cols-5 gap-3">
+                        <button
+                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
+                        >
+                            娱乐
+                        </button>
+                        <button
+                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
+                        >
+                            工作
+                        </button>
+                        <button class="category-btn active rounded-xl py-3 px-2 text-sm font-medium border border-transparent">学习</button>
+                        <button
+                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
+                        >
+                            游戏
+                        </button>
+                        <button
+                            class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-2 text-sm font-medium border border-gray-700/50"
+                        >
+                            健身
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部安全区域 -->
+            <div class="h-8"></div>
+        </div>
+
+        <script>
+            // 初始化 Lucide 图标
+            lucide.createIcons();
+
+            // 计时器功能
+            let isRunning = false;
+            let startTime = 0;
+            let elapsedTime = 0;
+            let timerInterval;
+
+            const playButton = document.querySelector('[data-lucide="play"]').parentElement;
+            const timeDisplay = document.querySelector(".text-5xl");
+            const timerCircle = document.querySelector(".timer-circle");
+
+            function updateDisplay() {
+                const totalSeconds = Math.floor(elapsedTime / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                const timeString = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
+                    .toString()
+                    .padStart(2, "0")}`;
+                timeDisplay.textContent = timeString;
+
+                // 更新圆环进度（示例：以1小时为一个周期）
+                const progress = (totalSeconds % 3600) / 3600;
+                const circumference = 2 * Math.PI * 90;
+                const offset = circumference - progress * circumference;
+                timerCircle.style.strokeDashoffset = offset;
+            }
+
+            function startTimer() {
+                if (!isRunning) {
+                    isRunning = true;
+                    startTime = Date.now() - elapsedTime;
+
+                    timerInterval = setInterval(() => {
+                        elapsedTime = Date.now() - startTime;
+                        updateDisplay();
+                    }, 1000);
+
+                    // 更新按钮图标为暂停
+                    playButton.innerHTML = '<i data-lucide="pause" class="w-8 h-8 text-white group-hover:scale-110 transition-transform"></i>';
+                    lucide.createIcons();
+                } else {
+                    isRunning = false;
+                    clearInterval(timerInterval);
+
+                    // 更新按钮图标为播放
+                    playButton.innerHTML = '<i data-lucide="play" class="w-8 h-8 text-white ml-1 group-hover:scale-110 transition-transform"></i>';
+                    lucide.createIcons();
+                }
+            }
+
+            playButton.addEventListener("click", startTimer);
+
+            // 分类按钮功能
+            const categoryButtons = document.querySelectorAll(".category-btn");
+            categoryButtons.forEach(button => {
+                button.addEventListener("click", () => {
+                    categoryButtons.forEach(btn => btn.classList.remove("active"));
+                    button.classList.add("active");
+                });
+            });
+
+            // 初始化显示
+            updateDisplay();
+        </script>
+    </body>
+</html>
