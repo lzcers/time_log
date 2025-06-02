@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>专注时间追踪 - 标签与时间管理</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <style>
+            .glass {
+                background: rgba(30, 41, 59, 0.7);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .segment-highlight {
+                filter: drop-shadow(0 0 8px currentColor);
+            }
+            .tag-item.active {
+                box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+            }
+            .time-entry:hover {
+                background: rgba(51, 65, 85, 0.5);
+            }
+            .tag-color-preview {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+        </style>
+    </head>
+    <body class="bg-slate-900 text-slate-100 min-h-screen p-4 flex flex-col items-center">
+        <div class="w-full max-w-md">
+            <h1 class="text-2xl font-bold text-center mb-6 text-sky-400">专注时间追踪</h1>
+
+            <!-- 标签管理模块 -->
+            <div class="glass rounded-2xl p-5 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">标签管理</h2>
+                    <button
+                        id="addTagBtn"
+                        class="bg-sky-500 hover:bg-sky-600 text-white rounded-full w-10 h-10 flex items-center justify-center transition"
+                    >
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3 max-h-80 overflow-y-auto scrollbar-hide pr-2">
+                    <!-- 标签项1 -->
+                    <div class="glass rounded-xl p-4 flex items-center">
+                        <div class="bg-sky-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-laptop-code text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">工作</div>
+                            <div class="text-slate-400 text-sm">#0ea5e9</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-pen text-sky-400"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-trash text-rose-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 标签项2 -->
+                    <div class="glass rounded-xl p-4 flex items-center">
+                        <div class="bg-violet-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-book text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">学习</div>
+                            <div class="text-slate-400 text-sm">#8b5cf6</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-pen text-sky-400"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-trash text-rose-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 标签项3 -->
+                    <div class="glass rounded-xl p-4 flex items-center">
+                        <div class="bg-emerald-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-book-open text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">阅读</div>
+                            <div class="text-slate-400 text-sm">#10b981</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-pen text-sky-400"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-trash text-rose-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 标签项4 -->
+                    <div class="glass rounded-xl p-4 flex items-center">
+                        <div class="bg-rose-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-dumbbell text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">健身</div>
+                            <div class="text-slate-400 text-sm">#f43f5e</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-pen text-sky-400"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-trash text-rose-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 标签项5 -->
+                    <div class="glass rounded-xl p-4 flex items-center">
+                        <div class="bg-amber-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-music text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">音乐</div>
+                            <div class="text-slate-400 text-sm">#f59e0b</div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-pen text-sky-400"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                                <i class="fas fa-trash text-rose-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 时间消耗列表模块 -->
+            <div class="glass rounded-2xl p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">时间记录</h2>
+                    <div class="flex items-center space-x-2">
+                        <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                            <i class="fas fa-calendar text-sky-400"></i>
+                        </button>
+                        <button class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center hover:bg-slate-600 transition">
+                            <i class="fas fa-filter text-emerald-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4 flex items-center space-x-2">
+                    <button class="px-3 py-1 glass rounded-full text-sm">今天</button>
+                    <button class="px-3 py-1 bg-slate-800 rounded-full text-sm">昨天</button>
+                    <button class="px-3 py-1 bg-slate-800 rounded-full text-sm">本周</button>
+                </div>
+
+                <div class="space-y-3 max-h-80 overflow-y-auto scrollbar-hide pr-2">
+                    <!-- 时间记录项1 -->
+                    <div class="time-entry glass rounded-xl p-4 flex items-center">
+                        <div class="bg-sky-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-laptop-code text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">工作</div>
+                            <div class="text-slate-400 text-sm">14:30 - 15:45</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono">1h 15m</div>
+                            <div class="text-slate-400 text-sm">项目开发</div>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-700 ml-3 flex items-center justify-center hover:bg-slate-600 transition">
+                            <i class="fas fa-ellipsis-v text-slate-300"></i>
+                        </button>
+                    </div>
+
+                    <!-- 时间记录项2 -->
+                    <div class="time-entry glass rounded-xl p-4 flex items-center">
+                        <div class="bg-violet-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-book text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">学习</div>
+                            <div class="text-slate-400 text-sm">16:00 - 17:30</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono">1h 30m</div>
+                            <div class="text-slate-400 text-sm">React学习</div>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-700 ml-3 flex items-center justify-center hover:bg-slate-600 transition">
+                            <i class="fas fa-ellipsis-v text-slate-300"></i>
+                        </button>
+                    </div>
+
+                    <!-- 时间记录项3 -->
+                    <div class="time-entry glass rounded-xl p-4 flex items-center">
+                        <div class="bg-emerald-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-book-open text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">阅读</div>
+                            <div class="text-slate-400 text-sm">19:00 - 20:15</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono">1h 15m</div>
+                            <div class="text-slate-400 text-sm">设计心理学</div>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-700 ml-3 flex items-center justify-center hover:bg-slate-600 transition">
+                            <i class="fas fa-ellipsis-v text-slate-300"></i>
+                        </button>
+                    </div>
+
+                    <!-- 时间记录项4 -->
+                    <div class="time-entry glass rounded-xl p-4 flex items-center">
+                        <div class="bg-rose-500 rounded-lg w-10 h-10 flex items-center justify-center mr-3">
+                            <i class="fas fa-dumbbell text-white"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium">健身</div>
+                            <div class="text-slate-400 text-sm">20:30 - 21:15</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-mono">45m</div>
+                            <div class="text-slate-400 text-sm">力量训练</div>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-slate-700 ml-3 flex items-center justify-center hover:bg-slate-600 transition">
+                            <i class="fas fa-ellipsis-v text-slate-300"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-between items-center">
+                    <div class="text-slate-400">今日总计: <span class="text-white font-medium">4h 45m</span></div>
+                    <button class="bg-sky-500 hover:bg-sky-600 text-white rounded-full w-10 h-10 flex items-center justify-center transition">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 底部导航 -->
+            <div class="glass rounded-2xl p-3 mt-6 flex justify-around">
+                <button class="flex flex-col items-center text-sky-400">
+                    <i class="fas fa-home text-xl mb-1"></i>
+                    <span class="text-xs">首页</span>
+                </button>
+                <button class="flex flex-col items-center text-slate-400">
+                    <i class="fas fa-chart-pie text-xl mb-1"></i>
+                    <span class="text-xs">统计</span>
+                </button>
+                <button class="flex flex-col items-center text-slate-400">
+                    <i class="fas fa-tags text-xl mb-1"></i>
+                    <span class="text-xs">标签</span>
+                </button>
+                <button class="flex flex-col items-center text-slate-400">
+                    <i class="fas fa-cog text-xl mb-1"></i>
+                    <span class="text-xs">设置</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 标签编辑模态框 -->
+        <div id="tagEditModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 hidden">
+            <div class="glass rounded-2xl p-6 w-full max-w-md">
+                <h3 class="text-xl font-semibold mb-4">编辑标签</h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-slate-400 mb-2">标签名称</label>
+                        <input type="text" value="工作" class="w-full glass rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-400 mb-2">图标</label>
+                        <div class="grid grid-cols-6 gap-2">
+                            <button class="glass rounded-lg p-2 flex items-center justify-center hover:bg-slate-700 transition">
+                                <i class="fas fa-laptop-code text-lg"></i>
+                            </button>
+                            <button class="glass rounded-lg p-2 flex items-center justify-center hover:bg-slate-700 transition">
+                                <i class="fas fa-book text-lg"></i>
+                            </button>
+                            <button class="glass rounded-lg p-2 flex items-center justify-center hover:bg-slate-700 transition">
+                                <i class="fas fa-book-open text-lg"></i>
+                            </button>
+                            <button class="glass rounded-lg p-2 flex items-center justify-center hover:bg-slate-700 transition">
+                                <i class="fas fa-dumbbell text-lg"></i>
+                            </button>
+                            <button class="glass rounded-lg p-2 flex items-center justify-center hover:bg-slate-700 transition">
+                                <i class="fas fa-music text-lg"></i>
+                            </button>
+                            <button class="glass rounded-lg p-2 flex items-center justify-center hover:bg-slate-700 transition">
+                                <i class="fas fa-plus text-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-400 mb-2">颜色</label>
+                        <div class="grid grid-cols-6 gap-2">
+                            <button class="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </button>
+                            <button class="w-8 h-8 rounded-full bg-violet-500"></button>
+                            <button class="w-8 h-8 rounded-full bg-emerald-500"></button>
+                            <button class="w-8 h-8 rounded-full bg-rose-500"></button>
+                            <button class="w-8 h-8 rounded-full bg-amber-500"></button>
+                            <button class="w-8 h-8 rounded-full bg-indigo-500"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button class="px-4 py-2 glass rounded-xl hover:bg-slate-700 transition">取消</button>
+                    <button class="px-4 py-2 bg-sky-500 hover:bg-sky-600 rounded-xl transition">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // 模态框交互示例
+            document.querySelectorAll(".tag-item .fa-pen").forEach(button => {
+                button.addEventListener("click", () => {
+                    document.getElementById("tagEditModal").classList.remove("hidden");
+                });
+            });
+
+            document.querySelectorAll("#tagEditModal button:not(.bg-sky-500)").forEach(button => {
+                button.addEventListener("click", () => {
+                    if (button.textContent === "取消") {
+                        document.getElementById("tagEditModal").classList.add("hidden");
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

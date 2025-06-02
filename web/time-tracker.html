@@ -1,300 +1,555 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="dark">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>时间记录工具</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title>TimeFocus</title>
         <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        <script>
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: {
+                                500: "#0ea5e9",
+                                600: "#0284c7",
+                            },
+                            dark: {
+                                900: "#0f172a",
+                                800: "#1e293b",
+                                700: "#334155",
+                            },
+                        },
+                        animation: {
+                            "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                            "fade-in": "fadeIn 0.3s ease forwards",
+                            "fade-out": "fadeOut 0.3s ease forwards",
+                        },
+                        keyframes: {
+                            fadeIn: {
+                                "0%": { opacity: 0, transform: "translateY(10px)" },
+                                "100%": { opacity: 1, transform: "translateY(0)" },
+                            },
+                            fadeOut: {
+                                "0%": { opacity: 1, transform: "translateY(0)" },
+                                "100%": { opacity: 0, transform: "translateY(10px)" },
+                            },
+                        },
+                    },
+                },
+            };
+        </script>
         <style>
-            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+            * {
+                -webkit-tap-highlight-color: transparent;
+                -webkit-user-select: none;
+                user-select: none;
+            }
 
             body {
-                font-family: "Inter", sans-serif;
+                font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+                background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+                color: #e2e8f0;
+                overflow: hidden;
+                touch-action: manipulation;
+                height: 100vh;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
             }
 
-            .timer-circle {
-                stroke-dasharray: 628;
-                stroke-dashoffset: 628;
-                transition: stroke-dashoffset 0.3s ease;
+            .glass {
+                background: rgba(30, 41, 59, 0.65);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid rgba(255, 255, 255, 0.08);
             }
 
-            .timer-circle.active {
-                stroke-dashoffset: 314;
-            }
-
-            .glass-effect {
-                backdrop-filter: blur(10px);
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-            }
-
-            .category-btn {
-                transition: all 0.3s ease;
-            }
-
-            .category-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-            }
-
-            .category-btn.active {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-            }
-
-            .scrollbar-hide {
-                -ms-overflow-style: none;
+            .tag-scroll {
                 scrollbar-width: none;
+                -ms-overflow-style: none;
             }
 
-            .scrollbar-hide::-webkit-scrollbar {
+            .tag-scroll::-webkit-scrollbar {
                 display: none;
             }
 
-            .category-btn {
-                flex-shrink: 0;
-            }
-        </style>
-    </head>
-    <body class="bg-gray-900 text-white min-h-screen">
-        <!-- 主容器 -->
-        <div class="max-w-md mx-auto min-h-screen bg-gray-900 relative overflow-hidden">
-            <!-- 背景装饰 -->
-            <div class="absolute inset-0 bg-gradient-to-br from-gray-800 via-gray-900 to-black"></div>
-            <div class="absolute top-20 left-10 w-32 h-32 bg-blue-500 rounded-full opacity-10 blur-xl"></div>
-            <div class="absolute bottom-40 right-10 w-24 h-24 bg-purple-500 rounded-full opacity-10 blur-xl"></div>
-
-            <!-- 顶部导航 -->
-            <div class="relative z-10 flex justify-between items-center p-6 pt-12">
-                <button class="glass-effect px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all">记时</button>
-                <button class="glass-effect px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all">详情</button>
-            </div>
-
-            <!-- 主计时器区域 -->
-            <div class="relative z-10 flex flex-col items-center justify-center px-8 py-12">
-                <!-- 圆形计时器 -->
-                <div class="relative mb-8">
-                    <svg class="w-64 h-64 transform -rotate-90" viewBox="0 0 200 200">
-                        <!-- 背景圆环 -->
-                        <circle cx="100" cy="100" r="90" stroke="rgba(255,255,255,0.1)" stroke-width="8" fill="none"></circle>
-                        <!-- 进度圆环 -->
-                        <circle
-                            cx="100"
-                            cy="100"
-                            r="90"
-                            stroke="url(#gradient)"
-                            stroke-width="8"
-                            fill="none"
-                            class="timer-circle active"
-                            stroke-linecap="round"
-                        ></circle>
-                        <!-- 渐变定义 -->
-                        <defs>
-                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color: #667eea; stop-opacity: 1" />
-                                <stop offset="100%" style="stop-color: #764ba2; stop-opacity: 1" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
-
-                    <!-- 播放按钮 -->
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <button class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-all group">
-                            <i data-lucide="play" class="w-8 h-8 text-white ml-1 group-hover:scale-110 transition-transform"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 时间显示 -->
-                <div class="text-center mb-8">
-                    <div class="text-5xl font-light mb-2 tracking-wider">03:46:59</div>
-                    <div class="text-lg text-gray-400 font-medium">03:46:59</div>
-                </div>
-
-                <!-- 统计信息 -->
-                <div class="flex justify-between w-full px-4 mb-12">
-                    <div class="text-center">
-                        <div class="text-sm text-gray-400 mb-1">今日专注</div>
-                        <div class="text-xl font-semibold">6 小时</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-sm text-gray-400 mb-1">总专注</div>
-                        <div class="text-xl font-semibold">1000 小时</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 底部分类按钮 -->
-            <div class="relative z-10 px-6 pb-8">
-                <div class="glass-effect rounded-2xl p-4">
-                    <!-- 滑动容器 -->
-                    <div class="overflow-x-auto scrollbar-hide">
-                        <div class="flex space-x-3 pb-2" style="width: max-content">
-                            <!-- 常用活动 -->
-                            <button
-                                class="category-btn active rounded-xl py-3 px-4 text-sm font-medium border border-transparent flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="book-open" class="w-5 h-5"></i>
-                                <span>学习</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="briefcase" class="w-5 h-5"></i>
-                                <span>工作</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="gamepad-2" class="w-5 h-5"></i>
-                                <span>游戏</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="dumbbell" class="w-5 h-5"></i>
-                                <span>健身</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="music" class="w-5 h-5"></i>
-                                <span>娱乐</span>
-                            </button>
-
-                            <!-- 更多活动项目 -->
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="utensils" class="w-5 h-5"></i>
-                                <span>用餐</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="car" class="w-5 h-5"></i>
-                                <span>通勤</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-                                <span>购物</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="users" class="w-5 h-5"></i>
-                                <span>社交</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="bed" class="w-5 h-5"></i>
-                                <span>休息</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="palette" class="w-5 h-5"></i>
-                                <span>创作</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="heart" class="w-5 h-5"></i>
-                                <span>冥想</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="home" class="w-5 h-5"></i>
-                                <span>家务</span>
-                            </button>
-                            <button
-                                class="category-btn bg-gray-800/50 hover:bg-gray-700/50 rounded-xl py-3 px-4 text-sm font-medium border border-gray-700/50 flex flex-col items-center space-y-1 min-w-[80px]"
-                            >
-                                <i data-lucide="plus" class="w-5 h-5"></i>
-                                <span>其他</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 底部安全区域 -->
-            <div class="h-8"></div>
-        </div>
-
-        <script>
-            // 初始化 Lucide 图标
-            lucide.createIcons();
-
-            // 计时器功能
-            let isRunning = false;
-            let startTime = 0;
-            let elapsedTime = 0;
-            let timerInterval;
-
-            const playButton = document.querySelector('[data-lucide="play"]').parentElement;
-            const timeDisplay = document.querySelector(".text-5xl");
-            const timerCircle = document.querySelector(".timer-circle");
-
-            function updateDisplay() {
-                const totalSeconds = Math.floor(elapsedTime / 1000);
-                const hours = Math.floor(totalSeconds / 3600);
-                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                const seconds = totalSeconds % 60;
-
-                const timeString = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds
-                    .toString()
-                    .padStart(2, "0")}`;
-                timeDisplay.textContent = timeString;
-
-                // 更新圆环进度（示例：以1小时为一个周期）
-                const progress = (totalSeconds % 3600) / 3600;
-                const circumference = 2 * Math.PI * 90;
-                const offset = circumference - progress * circumference;
-                timerCircle.style.strokeDashoffset = offset;
+            .timer-container {
+                position: relative;
+                width: 280px;
+                height: 280px;
+                margin: 0 auto 30px;
             }
 
-            function startTimer() {
-                if (!isRunning) {
-                    isRunning = true;
-                    startTime = Date.now() - elapsedTime;
+            .progress-ring {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                transform: rotate(-90deg);
+                transform-origin: center;
+            }
 
-                    timerInterval = setInterval(() => {
-                        elapsedTime = Date.now() - startTime;
-                        updateDisplay();
-                    }, 1000);
+            .tag-item {
+                transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
 
-                    // 更新按钮图标为暂停
-                    playButton.innerHTML = '<i data-lucide="pause" class="w-8 h-8 text-white group-hover:scale-110 transition-transform"></i>';
-                    lucide.createIcons();
-                } else {
-                    isRunning = false;
-                    clearInterval(timerInterval);
+            .tag-item.active {
+                box-shadow: 0 0 0 2px #0ea5e9, 0 0 20px rgba(14, 165, 233, 0.4);
+            }
 
-                    // 更新按钮图标为播放
-                    playButton.innerHTML = '<i data-lucide="play" class="w-8 h-8 text-white ml-1 group-hover:scale-110 transition-transform"></i>';
-                    lucide.createIcons();
+            .tag-item:hover {
+                transform: translateY(-3px);
+            }
+
+            .btn-press:active {
+                transform: scale(0.95);
+            }
+
+            .segment {
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .segment:hover {
+                filter: brightness(120%);
+            }
+
+            .tooltip {
+                position: absolute;
+                top: 0;
+                left: 0;
+                opacity: 0;
+                pointer-events: none;
+                z-index: 50;
+            }
+
+            .tooltip-content {
+                background: rgba(15, 23, 42, 0.9);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 8px 12px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+                min-width: 120px;
+                text-align: center;
+            }
+
+            .segment-highlight {
+                animation: segmentPulse 1.5s ease-in-out infinite;
+            }
+
+            @keyframes segmentPulse {
+                0% {
+                    filter: brightness(100%);
+                }
+                50% {
+                    filter: brightness(140%);
+                }
+                100% {
+                    filter: brightness(100%);
                 }
             }
 
-            playButton.addEventListener("click", startTimer);
+            @media (max-width: 400px) {
+                .timer-container {
+                    width: 260px;
+                    height: 260px;
+                }
 
-            // 分类按钮功能
-            const categoryButtons = document.querySelectorAll(".category-btn");
-            categoryButtons.forEach(button => {
-                button.addEventListener("click", () => {
-                    categoryButtons.forEach(btn => btn.classList.remove("active"));
-                    button.classList.add("active");
+                #timerBtn {
+                    width: 120px;
+                    height: 120px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="w-full max-w-md px-4">
+            <!-- 核心计时器 -->
+            <div class="glass rounded-2xl p-5 mb-5 flex flex-col items-center">
+                <div class="timer-container flex justify-center items-center">
+                    <!-- 外圈饼图 -->
+                    <svg class="progress-ring" viewBox="0 0 100 100">
+                        <!-- 工作 -->
+                        <circle
+                            id="work-segment"
+                            class="segment"
+                            data-tag="work"
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="#0ea5e9"
+                            stroke-width="8"
+                            stroke-dasharray="70.69 141.37"
+                            stroke-dashoffset="0"
+                        ></circle>
+                        <!-- 学习 -->
+                        <circle
+                            id="study-segment"
+                            class="segment"
+                            data-tag="study"
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="#8b5cf6"
+                            stroke-width="8"
+                            stroke-dasharray="35.34 141.37"
+                            stroke-dashoffset="-70.69"
+                        ></circle>
+                        <!-- 阅读 -->
+                        <circle
+                            id="reading-segment"
+                            class="segment"
+                            data-tag="reading"
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="#10b981"
+                            stroke-width="8"
+                            stroke-dasharray="35.34 141.37"
+                            stroke-dashoffset="-106.03"
+                        ></circle>
+                        <!-- 健身 -->
+                        <circle
+                            id="exercise-segment"
+                            class="segment"
+                            data-tag="exercise"
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="#f43f5e"
+                            stroke-width="8"
+                            stroke-dasharray="35.34 141.37"
+                            stroke-dashoffset="-141.37"
+                        ></circle>
+                        <!-- 剩余部分 -->
+                        <circle
+                            cx="50"
+                            cy="50"
+                            r="45"
+                            fill="none"
+                            stroke="#475569"
+                            stroke-width="8"
+                            stroke-dasharray="35.34 141.37"
+                            stroke-dashoffset="-176.71"
+                        ></circle>
+                    </svg>
+                    <!-- 悬浮提示容器 -->
+                    <div id="tooltip" class="tooltip">
+                        <div class="tooltip-content glass">
+                            <div class="font-medium text-white text-sm" id="tooltipTitle">工作</div>
+                            <div class="text-slate-300 font-mono text-sm" id="tooltipTime">1:25</div>
+                        </div>
+                    </div>
+                    <!-- 中心按钮 -->
+                    <button
+                        id="timerBtn"
+                        class="glass w-32 h-32 rounded-full flex flex-col items-center justify-center shadow-lg hover:bg-slate-700 transition"
+                    >
+                        <div id="timer" class="text-3xl font-mono font-bold text-white">25:00</div>
+                        <div class="text-slate-400 text-xs mt-1" id="timerState">准备开始</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 标签区域 -->
+            <div class="glass rounded-2xl p-4">
+                <div class="tag-scroll flex space-x-3 overflow-x-auto pb-2">
+                    <!-- 标签项 -->
+                    <div class="tag-item glass flex-shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center active" data-tag="work">
+                        <i class="fas fa-laptop-code text-primary-400 text-lg mb-1"></i>
+                        <span class="text-xs text-white">工作</span>
+                    </div>
+
+                    <div class="tag-item glass flex-shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center" data-tag="study">
+                        <i class="fas fa-book text-violet-400 text-lg mb-1"></i>
+                        <span class="text-xs text-white">学习</span>
+                    </div>
+
+                    <div class="tag-item glass flex-shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center" data-tag="reading">
+                        <i class="fas fa-book-open text-emerald-400 text-lg mb-1"></i>
+                        <span class="text-xs text-white">阅读</span>
+                    </div>
+
+                    <div class="tag-item glass flex-shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center" data-tag="exercise">
+                        <i class="fas fa-dumbbell text-rose-400 text-lg mb-1"></i>
+                        <span class="text-xs text-white">健身</span>
+                    </div>
+
+                    <div class="tag-item glass flex-shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center" data-tag="music">
+                        <i class="fas fa-music text-amber-400 text-lg mb-1"></i>
+                        <span class="text-xs text-white">音乐</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // 计时器状态
+            let timerInterval = null;
+            let isRunning = false;
+            let seconds = 1500; // 25分钟
+            const timerDisplay = document.getElementById("timer");
+            const timerBtn = document.getElementById("timerBtn");
+            const timerState = document.getElementById("timerState");
+            const tooltip = document.getElementById("tooltip");
+            const tooltipTitle = document.getElementById("tooltipTitle");
+            const tooltipTime = document.getElementById("tooltipTime");
+
+            // 标签数据
+            const tagData = {
+                work: {
+                    name: "工作",
+                    icon: "fa-laptop-code",
+                    color: "#0ea5e9",
+                    time: 5100, // 1小时25分钟
+                    total: "1:25",
+                },
+                study: {
+                    name: "学习",
+                    icon: "fa-book",
+                    color: "#8b5cf6",
+                    time: 2700, // 45分钟
+                    total: "0:45",
+                },
+                reading: {
+                    name: "阅读",
+                    icon: "fa-book-open",
+                    color: "#10b981",
+                    time: 2100, // 35分钟
+                    total: "0:35",
+                },
+                exercise: {
+                    name: "健身",
+                    icon: "fa-dumbbell",
+                    color: "#f43f5e",
+                    time: 1500, // 25分钟
+                    total: "0:25",
+                },
+                music: {
+                    name: "音乐",
+                    icon: "fa-music",
+                    color: "#f59e0b",
+                    time: 1200, // 20分钟
+                    total: "0:20",
+                },
+            };
+
+            // 当前选中的标签
+            let currentTag = "work";
+
+            // 格式化时间显示
+            function formatTime(totalSeconds) {
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = totalSeconds % 60;
+                return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+            }
+
+            // 开始/暂停计时器
+            function toggleTimer() {
+                if (!isRunning) {
+                    // 开始计时
+                    isRunning = true;
+                    timerState.textContent = "专注中";
+                    timerBtn.classList.add("bg-slate-700");
+
+                    timerInterval = setInterval(() => {
+                        seconds--;
+                        timerDisplay.textContent = formatTime(seconds);
+
+                        if (seconds <= 0) {
+                            clearInterval(timerInterval);
+                            isRunning = false;
+                            timerState.textContent = "完成！";
+                            timerBtn.classList.remove("bg-slate-700");
+
+                            // 更新标签数据
+                            tagData[currentTag].time += 1500;
+                            tagData[currentTag].total = formatTime(tagData[currentTag].time);
+
+                            // 显示完成效果
+                            showCompleteAnimation();
+
+                            // 3秒后重置
+                            setTimeout(() => {
+                                resetTimer();
+                            }, 3000);
+                        }
+                    }, 1000);
+                } else {
+                    // 暂停计时
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    timerState.textContent = "已暂停";
+                    timerBtn.classList.remove("bg-slate-700");
+                }
+            }
+
+            // 重置计时器
+            function resetTimer() {
+                clearInterval(timerInterval);
+                isRunning = false;
+                seconds = 1500;
+                timerDisplay.textContent = formatTime(seconds);
+                timerState.textContent = "准备开始";
+                timerBtn.classList.remove("bg-slate-700");
+            }
+
+            // 显示完成动画
+            function showCompleteAnimation() {
+                timerBtn.classList.add("animate-pulse-slow");
+                timerBtn.classList.add("bg-emerald-700");
+
+                setTimeout(() => {
+                    timerBtn.classList.remove("animate-pulse-slow");
+                    timerBtn.classList.remove("bg-emerald-700");
+                }, 3000);
+            }
+
+            // 显示标签提示
+            function showTagTooltip(tagId, x, y) {
+                const tag = tagData[tagId];
+
+                tooltipTitle.textContent = tag.name;
+                tooltipTime.textContent = tag.total;
+                tooltipTime.style.color = tag.color;
+
+                // 设置位置
+                tooltip.style.left = `${x}px`;
+                tooltip.style.top = `${y - 60}px`;
+
+                // 显示提示
+                tooltip.style.opacity = "1";
+                tooltip.style.pointerEvents = "auto";
+                tooltip.classList.remove("animate-fade-out");
+                tooltip.classList.add("animate-fade-in");
+
+                // 3秒后隐藏
+                setTimeout(() => {
+                    hideTagTooltip();
+                }, 2000);
+            }
+
+            // 隐藏标签提示
+            function hideTagTooltip() {
+                tooltip.classList.remove("animate-fade-in");
+                tooltip.classList.add("animate-fade-out");
+
+                setTimeout(() => {
+                    tooltip.style.opacity = "0";
+                    tooltip.style.pointerEvents = "none";
+                }, 300);
+            }
+
+            // 高亮选中的饼图片段
+            function highlightSegment(tagId) {
+                // 移除所有高亮
+                document.querySelectorAll(".segment").forEach(segment => {
+                    segment.classList.remove("segment-highlight");
+                });
+
+                // 高亮当前片段
+                const segment = document.getElementById(`${tagId}-segment`);
+                if (segment) {
+                    segment.classList.add("segment-highlight");
+                }
+            }
+
+            // 标签选择功能
+            const tagItems = document.querySelectorAll(".tag-item");
+
+            tagItems.forEach(tag => {
+                tag.addEventListener("click", () => {
+                    const tagId = tag.dataset.tag;
+
+                    // 更新当前标签
+                    currentTag = tagId;
+
+                    // 重置计时器
+                    resetTimer();
+
+                    // 更新标签样式
+                    tagItems.forEach(t => t.classList.remove("active"));
+                    tag.classList.add("active");
+
+                    // 高亮饼图片段
+                    highlightSegment(tagId);
                 });
             });
 
-            // 初始化显示
-            updateDisplay();
+            // 饼图区域点击事件 - 修复版本
+            document.querySelectorAll(".segment").forEach(segment => {
+                segment.addEventListener("click", function (e) {
+                    const tagId = this.dataset.tag;
+
+                    // 获取鼠标位置
+                    const rect = segment.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    // 计算角度
+                    const angle = (Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180) / Math.PI;
+                    const normalizedAngle = (angle + 450) % 360; // 转换为0-360度
+
+                    // 根据角度确定点击的饼图片段
+                    if (normalizedAngle >= 0 && normalizedAngle < 90) {
+                        // 工作片段
+                        activateSegment("work");
+                    } else if (normalizedAngle >= 90 && normalizedAngle < 180) {
+                        // 学习片段
+                        activateSegment("study");
+                    } else if (normalizedAngle >= 180 && normalizedAngle < 270) {
+                        // 阅读片段
+                        activateSegment("reading");
+                    } else {
+                        // 健身片段
+                        activateSegment("exercise");
+                    }
+
+                    // 显示提示
+                    showTagTooltip(tagId, e.clientX - rect.left, e.clientY - rect.top);
+                });
+            });
+
+            // 激活饼图片段
+            function activateSegment(tagId) {
+                // 找到对应的标签项
+                const tagItem = document.querySelector(`.tag-item[data-tag="${tagId}"]`);
+
+                if (tagItem) {
+                    // 触发标签点击
+                    tagItem.click();
+                }
+            }
+
+            // 按钮事件绑定
+            timerBtn.addEventListener("click", toggleTimer);
+
+            // 触摸反馈效果
+            document.querySelectorAll(".tag-item, .segment, #timerBtn").forEach(btn => {
+                btn.addEventListener("touchstart", function () {
+                    this.classList.add("opacity-80");
+                });
+
+                btn.addEventListener("touchend", function () {
+                    this.classList.remove("opacity-80");
+                });
+            });
+
+            // 初始化页面
+            timerDisplay.textContent = formatTime(seconds);
+            highlightSegment(currentTag);
         </script>
     </body>
 </html>
